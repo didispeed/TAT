@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Townies and Traitors (TAT) - Moderated by Paul</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f0a500;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .moderator {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .game-info {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #f0a500;
+        }
+
+        .phase-indicator {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(240, 165, 0, 0.2);
+            border-radius: 8px;
+            border: 2px solid #f0a500;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .player-card {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #444;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .player-card:hover {
+            transform: translateY(-5px);
+            border-color: #f0a500;
+            box-shadow: 0 5px 15px rgba(240, 165, 0, 0.3);
+        }
+
+        .player-card.dead {
+            opacity: 1;
+            background: rgba(139, 0, 0, 0.4);
+            border-color: #ff0000;
+            position: relative;
+        }
+
+        .player-card.dead::before {
+            content: '';
+            display: none;
+        }
+
+        .player-card.dead:hover {
+            transform: none;
+            border-color: #ff0000;
+            box-shadow: none;
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #f0a500;
+        }
+
+        .player-status {
+            font-size: 0.85em;
+            color: #aaa;
+        }
+
+        .role-reveal {
+            font-size: 0.8em;
+            color: #ff6b6b;
+            margin-top: 5px;
+        }
+
+        .action-panel {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #f0a500;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background: #ffc107;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .narrative-box {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #f0a500;
+            min-height: 100px;
+        }
+
+        .narrative-text {
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+
+        .voting-section {
+            margin: 20px 0;
+        }
+
+        .vote-button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #ffffff;
+            color: #1a1a2e;
+            font-size: 0.9em;
+        }
+
+        .vote-button:hover {
+            background: #f0f0f0;
+        }
+
+        .vote-count {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .role-info {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .role-info h3 {
+            color: #f0a500;
+            margin-bottom: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            border: 2px solid #f0a500;
+            text-align: center;
+        }
+
+        .modal h2 {
+            color: #f0a500;
+            margin-bottom: 15px;
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 40px;
+            background: rgba(240, 165, 0, 0.1);
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .game-over h2 {
+            font-size: 2.5em;
+            color: #f0a500;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <div style="display: inline-block; position: relative; font-size: 3em;">
+                <span style="color: #dc3545; position: relative; z-index: 1;">🔪</span><span style="color: #28a745; position: relative; z-index: 2; margin-left: -0.3em;">🔍</span>
+            </div>
+        </div>
+        <h1><span style="color: #28a745;">TOWNIES</span> AND <span style="color: #dc3545;">TRAITORS</span> (TAT)</h1>
+        <p class="moderator">Moderated and coded by Paul | Tested and game setup created by Fadil Pio</p>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <div id="homeScreen">
+                <h2 style="color: #f0a500; margin-bottom: 20px;">Choose Game Mode</h2>
+                
+                <div style="margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    <label style="color: #f0a500; display: block; margin-bottom: 8px; font-weight: bold;">Town Name:</label>
+                    <input type="text" id="townNameInput" placeholder="Enter your town name..." maxlength="30" style="
+                        width: 100%;
+                        padding: 12px;
+                        border-radius: 6px;
+                        border: 2px solid #444;
+                        background: rgba(255,255,255,0.1);
+                        color: #eee;
+                        font-size: 1.1em;
+                        text-align: center;
+                    ">
+                </div>
+                
+                <button onclick="createGame(true)" style="
+                    background: #28a745;
+                    color: white;
+                    font-size: 1.3em;
+                    padding: 15px 40px;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin: 10px;
+                    display: block;
+                    width: 100%;
+                    max-width: 400px;
+                    margin-left: auto;
+                    margin-right: auto;
+                " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
+                    🤖 Multiplayer With Bots (MWB)
+                </button>
+                <button onclick="createGame(false)" style="
+                    background: #007bff;
+                    color: white;
+                    font-size: 1.3em;
+                    padding: 15px 40px;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin: 10px;
+                    display: block;
+                    width: 100%;
+                    max-width: 400px;
+                    margin-left: auto;
+                    margin-right: auto;
+                " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
+                    👥 Multiplayer No Bots
+                </button>
+                
+                <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    <h3 style="color: #f0a500; margin-bottom: 15px;">Join Available Towns</h3>
+                    <input type="text" id="joinCodeInput" placeholder="Enter Town's Passcode" style="
+                        width: 100%;
+                        padding: 12px;
+                        border-radius: 6px;
+                        border: 2px solid #444;
+                        background: rgba(255,255,255,0.1);
+                        color: #eee;
+                        font-size: 1.1em;
+                        margin-bottom: 10px;
+                        text-align: center;
+                        text-transform: uppercase;
+                    ">
+                    <button onclick="joinGame()" style="
+                        background: #ffc107;
+                        color: #1a1a2e;
+                        font-size: 1.1em;
+                        padding: 12px 30px;
+                        border: none;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        width: 100%;
+                    ">Move to Town</button>
+                </div>
+            </div>
+            
+            <div id="lobbyScreen" style="display: none;">
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h2 style="color: #f0a500;" id="townNameDisplay">Town</h2>
+                    <div style="font-size: 1.5em; margin: 15px 0;">
+                        <strong>Town's Passcode: <span id="gameCodeDisplay" style="color: #28a745; background: rgba(40, 167, 69, 0.2); padding: 5px 15px; border-radius: 5px; letter-spacing: 2px;"></span></strong>
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <strong>Players: <span id="playerCountDisplay">0</span>/<span id="maxPlayersDisplay">13</span></strong>
+                    </div>
+                    <div id="playerListDisplay" style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; max-height: 200px; overflow-y: auto;">
+                        <strong style="color: #f0a500;">Players in Town:</strong>
+                        <div id="playerListContent" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+                
+                <button onclick="startGame()" id="startButton" style="
+                    background: #28a745;
+                    color: white;
+                    font-size: 1.5em;
+                    padding: 20px 60px;
+                    border: none;
+                    border-radius: 12px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+                    transition: all 0.3s;
+                " onmouseover="this.style.background='#218838'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#28a745'; this.style.transform='scale(1)'">
+                    🎮 START GAME 🎮
+                </button>
+            </div>
+        </div>
+
+        <div class="phase-indicator" id="phaseIndicator">
+            Game Starting...
+        </div>
+
+        <div id="timerDisplay" style="display: none; text-align: center; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+            <h3 id="timerPhaseText" style="color: #f0a500; margin-bottom: 10px;">Discussion Phase</h3>
+            <div id="timerCountdown" style="font-size: 2em; font-weight: bold; color: #fff;">210</div>
+        </div>
+
+        <div class="game-info">
+            <h2 style="color: #f0a500; margin-bottom: 15px;">Game Setup</h2>
+            <p><strong>Players:</strong> 14 total</p>
+            <p><strong>Roles:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                <li>🔪 2 Traitors - Vote to kill ONE player EACH NIGHT (Traitor Team)</li>
+                <li>🗡️ 1 Assassin - Can kill ONE additional player ONCE per game (Traitor Support)</li>
+                <li>💕 2 Lovers - If one dies, both die (Town)</li>
+                <li>🔍 1 Investigator - Investigate ONE player EVERY 2 NIGHTS (Town)</li>
+                <li>🎯 1 Vigilante - Can kill one player they suspect is a Traitor (Town)</li>
+                <li>⚕️ 1 Doctor - Save ONE player EVERY NIGHT (Town)</li>
+                <li>👥 5 Townies - No special abilities (Town)</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Win Conditions:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                <li><strong>Traitors win:</strong> When Traitor team equals or outnumbers Town</li>
+                <li><strong>Town wins:</strong> When all Traitors (including Assassin) are eliminated</li>
+            </ul>
+        </div>
+
+        <div class="narrative-box">
+            <div class="narrative-text" id="narrativeText">
+                Welcome to the town! Grab your gun, medical license, your magnifying glass, your braincells, your knife, your riffle, your cards, your love, and most importantly, your FAITH. You try to walk down the stairs? Don't do it at night. You're trying to swim? Don't try it at night. You try to pick up books? Don't try it at night. You try to drink water? Don't try it at night. You want to go get some fresh air? Don't try it at night. Want to close to the wall? Don't try it at night. You want to trust someone? NEVER DO THAT AT NIGHT OR DAY. In this world of TAT, you can be heart broken, Xcuted, Killed, saved, betrayed, get played, and you can sure well experience fun and trust issues! ...help! help m-.... (I hate this town)
+            </div>
+        </div>
+
+        <div class="action-panel">
+            <div class="button-group">
+                <button onclick="resetGame()" style="background: #e63946;">Reset Game</button>
+            </div>
+        </div>
+
+        <div class="players-grid" id="playersGrid">
+            <!-- Players will be populated here -->
+        </div>
+
+        <div class="voting-section" id="votingSection" style="display: none;">
+            <h3 style="color: #f0a500; margin-bottom: 15px;">Cast Your Votes</h3>
+            <div id="votingButtons"></div>
+        </div>
+
+        <div id="chatSection" style="display: none;">
+            <div class="action-panel">
+                <h3 style="color: #f0a500; margin-bottom: 15px;" id="chatTitle">Town Discussion</h3>
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto; margin-bottom: 15px;" id="chatMessages">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="chatInput" placeholder="Type your message..." style="flex: 1; padding: 10px; border-radius: 6px; border: 2px solid #444; background: rgba(255,255,255,0.1); color: #eee; font-size: 1em;" onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="spectateSection" style="display: none;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                <h2 style="color: white; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">👻 SPECTATEVERSE 👻</h2>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">You are dead. Watch and learn...</p>
+            </div>
+            <div class="action-panel">
+                <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Spectating Town Discussion</h3>
+                <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 8px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                    <div id="spectateMessages" style="height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;"></div>
+                    <p style="margin-top: 10px; color: #999; font-style: italic; text-align: center;">You can watch but cannot interact</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="nightActionPanel" style="display: none;">
+            <div class="action-panel">
+                <h3 style="color: #f0a500; margin-bottom: 15px;" id="nightActionTitle">Night Action</h3>
+                <p id="nightActionDescription" style="margin-bottom: 15px; color: #aaa;"></p>
+                <div id="nightActionButtons" class="button-group">
+                </div>
+                <div id="nightActionResult" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; display: none;">
+                </div>
+            </div>
+        </div>
+
+        <div id="deathNotePanel" style="display: none;">
+            <div class="action-panel">
+                <h3 style="color: #f0a500; margin-bottom: 15px;">📝 Your Secret Death Note</h3>
+                <p style="margin-bottom: 15px; color: #aaa;">Write a message that will be revealed to everyone when you die. You can share your suspicions, reveal information, or leave any final words:</p>
+                <textarea id="deathNoteText" placeholder="Write your death note here... (e.g., 'I suspect Alex is a Traitor' or 'Trust Sofia, she helped me')" style="width: 100%; height: 120px; padding: 10px; border-radius: 6px; border: 2px solid #444; background: rgba(255,255,255,0.1); color: #eee; font-size: 1em; font-family: inherit; resize: vertical;"></textarea>
+                <button onclick="saveDeathNote()" style="margin-top: 10px;">Save Death Note</button>
+                <p id="deathNoteSaved" style="margin-top: 10px; color: #4d9eff; display: none;">✓ Death note saved!</p>
+            </div>
+        </div>
+
+        <div id="deathLogPanel" style="display: none;">
+            <div class="action-panel">
+                <h3 style="color: #ff4d5a; margin-bottom: 15px;">💀 Death Log</h3>
+                <div id="deathLogContent" style="max-height: 300px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="playerSelectModal">
+        <div class="modal-content">
+            <h2>Select Your Player</h2>
+            <p style="margin: 15px 0; color: #aaa;">Choose which player you are:</p>
+            <div id="playerSelectButtons" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0;">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="roleRevealModal">
+        <div class="modal-content">
+            <h2>Your Role</h2>
+            <div id="roleRevealContent" style="margin: 20px 0; font-size: 1.2em;">
+            </div>
+            <button onclick="closeRoleReveal()">Continue</button>
+        </div>
+    </div>
+
+    <div class="modal" id="roleModal">
+        <div class="modal-content">
+            <h2>Role Assignments</h2>
+            <div id="roleAssignments" style="margin: 20px 0; text-align: left;"></div>
+            <button onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const playerNames = [
+            'Yuu', 'Charlie', 'Ethan', 'Lucas', 'Sofia', 'Ava', 
+            'Jordan', 'Watt', 'Cameron', 'Leo', 'Alex', 'Nina', 'Sonny'
+        ];
+
+        const botPersonalities = {
+            'Yuu': { 
+                gender: 'Male', 
+                iq: 105, 
+                traits: 'Town leader, calm, very dangerous when left alive, can find ways out of situations',
+                playStyle: 'Strategic and composed, excellent at reading situations and manipulating discussions to town advantage'
+            },
+            'Charlie': { 
+                gender: 'Female', 
+                iq: 114, 
+                traits: 'Has lots of info and theories, gives very detailed explanations, looks carefully at reactions',
+                playStyle: 'Analytical and thorough, provides detailed reasoning and watches how others respond'
+            },
+            'Ethan': { 
+                gender: 'Male', 
+                iq: 100, 
+                traits: 'Calm and fun personality',
+                playStyle: 'Keeps discussions light but contributes meaningfully, maintains composure'
+            },
+            'Lucas': { 
+                gender: 'Male', 
+                iq: 115, 
+                traits: 'Cautious, good leader, smartest bot',
+                playStyle: 'Carefully considers all evidence, leads discussions thoughtfully, avoids rash decisions'
+            },
+            'Sofia': { 
+                gender: 'Female', 
+                iq: 112, 
+                traits: 'Asks questions, gentle when tunneling someone',
+                playStyle: 'Inquisitive but diplomatic, pressures suspects without being aggressive'
+            },
+            'Ava': { 
+                gender: 'Female', 
+                iq: 102, 
+                traits: 'Quietest, most observant, studies reactions',
+                playStyle: 'Rarely speaks but when she does it\'s insightful, watches behavioral patterns closely'
+            },
+            'Jordan': { 
+                gender: 'Male', 
+                iq: 102, 
+                traits: 'Not comfortable skipping, makes reasonable explanations',
+                playStyle: 'Prefers to always vote, provides logical justifications for decisions'
+            },
+            'Watt': { 
+                gender: 'Male', 
+                iq: 100, 
+                traits: 'Standard player',
+                playStyle: 'Balanced approach, contributes to discussions normally'
+            },
+            'Cameron': { 
+                gender: 'Male', 
+                iq: 104, 
+                traits: 'Stereotypical, never trusts anyone, serious about voting',
+                playStyle: 'Suspicious of everyone, takes voting very seriously, doesn\'t trust easily'
+            },
+            'Leo': { 
+                gender: 'Male', 
+                iq: 102, 
+                traits: 'Gets stuck in decisions but very good player overall',
+                playStyle: 'Wavers between options, but ultimate conclusions are usually sound'
+            },
+            'Alex': { 
+                gender: 'Male', 
+                iq: 104, 
+                traits: 'Most dramatic',
+                playStyle: 'Expressive and emotional, reacts strongly to events and accusations'
+            },
+            'Nina': { 
+                gender: 'Female', 
+                iq: 101, 
+                traits: 'Semi-serious, common sense, very nice',
+                playStyle: 'Friendly and reasonable, uses practical logic in discussions'
+            },
+            'Sonny': { 
+                gender: 'Female', 
+                iq: 101, 
+                traits: 'Very bright, very agreeable',
+                playStyle: 'Pleasant and cooperative, intelligent contributions without being confrontational'
+            }
+        };
+
+        const deathCauses = [
+            'Stabbed in the dark',
+            'Poisoned drink',
+            'Strangled with a rope',
+            'Pushed off a cliff',
+            'Drowned in the river',
+            'Hit over the head with a blunt object',
+            'Shot with an arrow',
+            'Fatal wound from knife attack',
+            'Mysterious blood loss',
+            'Suffocated in their sleep',
+            'Fell down the stairs',
+            'Attacked in the woods'
+        ];
+
+        const roles = {
+            TRAITOR: { name: 'Traitor', count: 2, team: 'traitor' },
+            ASSASSIN: { name: 'Assassin', count: 1, team: 'traitor' },
+            LOVER: { name: 'Lover', count: 2, team: 'town' },
+            INVESTIGATOR: { name: 'Investigator', count: 1, team: 'town' },
+            VIGILANTE: { name: 'Vigilante', count: 1, team: 'town' },
+            DOCTOR: { name: 'Doctor', count: 1, team: 'town' },
+            TOWNIE: { name: 'Townie', count: 5, team: 'town' }
+        };
+
+        let gameState = {
+            phase: 'setup',
+            day: 0,
+            players: [],
+            votes: {},
+            gameStarted: false,
+            vigilanteUsed: false,
+            assassinUsed: false,
+            currentPlayer: null,
+            chatMessages: [],
+            mafiaChat: [],
+            nightActions: {
+                doctorSave: null,
+                investigatorTarget: null,
+                investigationResult: null,
+                investigatorLastUsed: 0,
+                traitorVotes: {},
+                assassinKill: null
+            },
+            deathLog: [],
+            playerVoted: {},
+            statistics: {
+                messageCount: {},
+                killCount: {},
+                firstDeath: null
+            },
+            discussionPhase: true,
+            timeRemaining: 210,
+            timerInterval: null,
+            botMemory: {}, // Stores memories from previous games for NLP
+            playerSelectionTimer: 25,
+            nightDiscussionPhase: true,
+            nightTimeRemaining: 25,
+            // Multiplayer state
+            isMultiplayer: false,
+            withBots: true,
+            gameCode: null,
+            townName: 'Town',
+            isHost: false,
+            maxPlayers: 13,
+            minPlayers: 3,
+            connectedPlayers: [],
+            multiplayerPolling: null,
+            assassinKillUsed: false
+        };
+
+        function getDynamicRoles(playerCount) {
+            let traitorCount, assassinCount;
+            
+            // Dynamic traitor count based on players
+            if (playerCount >= 1 && playerCount <= 7) {
+                traitorCount = 1;
+                assassinCount = 0;
+            } else if (playerCount >= 8 && playerCount <= 11) {
+                traitorCount = 2;
+                assassinCount = 0;
+            } else { // 12-13+ players
+                traitorCount = 2;
+                assassinCount = 1;
+            }
+            
+            const townCount = playerCount - traitorCount - assassinCount;
+            
+            // Distribute town roles
+            let loverCount = Math.min(2, Math.floor(townCount / 3));
+            let investigatorCount = playerCount >= 8 ? 1 : 0;
+            let vigilanteCount = playerCount >= 10 ? 1 : 0;
+            let doctorCount = playerCount >= 6 ? 1 : 0;
+            let townieCount = townCount - loverCount - investigatorCount - vigilanteCount - doctorCount;
+            
+            return {
+                TRAITOR: { name: 'Traitor', count: traitorCount, team: 'traitor' },
+                ASSASSIN: { name: 'Assassin', count: assassinCount, team: 'traitor' },
+                LOVER: { name: 'Lover', count: loverCount, team: 'town' },
+                INVESTIGATOR: { name: 'Investigator', count: investigatorCount, team: 'town' },
+                VIGILANTE: { name: 'Vigilante', count: vigilanteCount, team: 'town' },
+                DOCTOR: { name: 'Doctor', count: doctorCount, team: 'town' },
+                TOWNIE: { name: 'Townie', count: Math.max(0, townieCount), team: 'town' }
+            };
+        }
+
+        function initializePlayers(customPlayers = null) {
+            const players = customPlayers || playerNames;
+            const dynamicRoles = getDynamicRoles(players.length);
+            
+            const roleList = [];
+            
+            for (let role in dynamicRoles) {
+                for (let i = 0; i < dynamicRoles[role].count; i++) {
+                    roleList.push(role);
+                }
+            }
+
+            // Shuffle roles
+            for (let i = roleList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [roleList[i], roleList[j]] = [roleList[j], roleList[i]];
+            }
+
+            gameState.players = players.map((name, index) => ({
+                name: name,
+                role: roleList[index % roleList.length],
+                alive: true,
+                protected: false,
+                investigated: false,
+                deathNote: ''
+            }));
+
+            // Assign lover pairs
+            const lovers = gameState.players.filter(p => p.role === 'LOVER');
+            if (lovers.length === 2) {
+                lovers[0].loverPartner = lovers[1].name;
+                lovers[1].loverPartner = lovers[0].name;
+            }
+
+            renderPlayers();
+            
+            // Update game info display
+            updateGameInfoDisplay(players.length);
+        }
+
+        function updateGameInfoDisplay(playerCount) {
+            const roles = getDynamicRoles(playerCount);
+            let roleHTML = '<ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">';
+            
+            if (roles.TRAITOR.count > 0) {
+                roleHTML += `<li>🔪 ${roles.TRAITOR.count} Traitor(s) - Vote to kill ONE player EACH NIGHT (Traitor Team)</li>`;
+            }
+            if (roles.ASSASSIN.count > 0) {
+                roleHTML += `<li>🗡️ ${roles.ASSASSIN.count} Assassin - Can kill ONE additional player ONCE per game (Traitor Support)</li>`;
+            }
+            if (roles.LOVER.count > 0) {
+                roleHTML += `<li>💕 ${roles.LOVER.count} Lover(s) - If one dies, both die (Town)</li>`;
+            }
+            if (roles.INVESTIGATOR.count > 0) {
+                roleHTML += `<li>🔍 ${roles.INVESTIGATOR.count} Investigator - Investigate ONE player EVERY 2 NIGHTS (Town)</li>`;
+            }
+            if (roles.VIGILANTE.count > 0) {
+                roleHTML += `<li>🎯 ${roles.VIGILANTE.count} Vigilante - Can kill one player they suspect is a Traitor (Town)</li>`;
+            }
+            if (roles.DOCTOR.count > 0) {
+                roleHTML += `<li>⚕️ ${roles.DOCTOR.count} Doctor - Save ONE player EVERY NIGHT (Town)</li>`;
+            }
+            if (roles.TOWNIE.count > 0) {
+                roleHTML += `<li>👥 ${roles.TOWNIE.count} Townie(s) - No special abilities (Town)</li>`;
+            }
+            
+            roleHTML += '</ul>';
+            
+            const gameInfoDiv = document.querySelector('.game-info ul');
+            if (gameInfoDiv) {
+                gameInfoDiv.parentElement.innerHTML = `<h2 style="color: #f0a500; margin-bottom: 15px;">Game Setup</h2>
+                    <p><strong>Players:</strong> ${playerCount} total</p>
+                    <p><strong>Roles:</strong></p>` + roleHTML;
+            }
+        }
+
+        function renderPlayers() {
+            const grid = document.getElementById('playersGrid');
+            grid.innerHTML = '';
+
+            gameState.players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = `player-card ${!player.alive ? 'dead' : ''}`;
+                
+                let deathBadge = '✗ DEAD';
+                if (!player.alive) {
+                    // Check if they were executed (voted out)
+                    const deathRecord = gameState.deathLog.find(d => d.name === player.name);
+                    if (deathRecord && deathRecord.cause === 'Executed by village vote') {
+                        deathBadge = '✗ XCUTED';
+                    }
+                }
+                
+                card.innerHTML = `
+                    <div class="player-name">${player.name}</div>
+                    <div class="player-status">${player.alive ? '✓ Alive' : deathBadge}</div>
+                    ${!player.alive ? `<div class="role-reveal">Was: ${roles[player.role].name}</div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function startGame() {
+            if (gameState.isMultiplayer) {
+                if (!gameState.isHost) {
+                    alert('Only the host can start the game!');
+                    return;
+                }
+                
+                if (gameState.connectedPlayers.length < gameState.minPlayers) {
+                    alert(`Need at least ${gameState.minPlayers} players to start!`);
+                    return;
+                }
+                
+                // Mark game as started in lobby
+                const lobbyKey = `tat_lobby_${gameState.gameCode}`;
+                const lobbyData = JSON.parse(localStorage.getItem(lobbyKey));
+                lobbyData.started = true;
+                localStorage.setItem(lobbyKey, JSON.stringify(lobbyData));
+                
+                startMultiplayerGame();
+            } else {
+                // Single player mode
+                loadBotMemory();
+                initializePlayers();
+                showPlayerSelection();
+            }
+        }
+
+        function initializeMultiplayerGame() {
+            loadBotMemory();
+            
+            // Create players list from connected players + bots if needed
+            const humanPlayers = gameState.connectedPlayers.map(p => p.name);
+            
+            if (gameState.withBots) {
+                // Fill remaining slots with bots
+                const remainingSlots = 14 - humanPlayers.length;
+                const availableBots = playerNames.filter(name => !humanPlayers.includes(name));
+                
+                for (let i = 0; i < remainingSlots && i < availableBots.length; i++) {
+                    humanPlayers.push(availableBots[i]);
+                }
+            }
+            
+            // Initialize game with these players
+            initializePlayers(humanPlayers);
+            
+            // Find current player's name
+            const myPlayerId = generatePlayerId();
+            const myPlayerData = gameState.connectedPlayers.find(p => p.id === myPlayerId);
+            if (myPlayerData) {
+                const myPlayer = gameState.players.find(p => p.name === myPlayerData.name);
+                if (myPlayer) {
+                    gameState.currentPlayer = myPlayer;
+                    showRoleReveal();
+                    document.getElementById('deathNoteText').value = myPlayer.deathNote || '';
+                }
+            }
+            
+            // Start game
+            gameState.gameStarted = true;
+            gameState.phase = 'night';
+            gameState.day = 1;
+
+            document.getElementById('startButton').style.display = 'none';
+
+            updateNarrative("Night has fallen on the village. The Traitors awaken to choose their victim...");
+            updatePhase();
+            updateChatVisibility();
+            updateDeathNoteVisibility();
+            
+            // Start game state synchronization
+            startGameStatePolling();
+            
+            startNightTimer();
+        }
+
+        function showPlayerSelection() {
+            const modal = document.getElementById('playerSelectModal');
+            const buttonsDiv = document.getElementById('playerSelectButtons');
+            buttonsDiv.innerHTML = '';
+
+            // Add timer display
+            let selectionTime = 25;
+            const timerP = document.createElement('p');
+            timerP.id = 'selectionTimer';
+            timerP.style.cssText = 'color: #f0a500; font-size: 1.2em; margin-bottom: 15px;';
+            timerP.textContent = `Time remaining: ${selectionTime}s`;
+            buttonsDiv.appendChild(timerP);
+
+            playerNames.forEach(name => {
+                const btn = document.createElement('button');
+                btn.textContent = name;
+                btn.style.padding = '15px';
+                btn.onclick = () => {
+                    clearInterval(selectionInterval);
+                    selectPlayer(name);
+                };
+                buttonsDiv.appendChild(btn);
+            });
+
+            modal.classList.add('active');
+            
+            // Start selection timer
+            const selectionInterval = setInterval(() => {
+                selectionTime--;
+                const timerEl = document.getElementById('selectionTimer');
+                if (timerEl) {
+                    timerEl.textContent = `Time remaining: ${selectionTime}s`;
+                    if (selectionTime <= 10) {
+                        timerEl.style.color = '#ff4d5a';
+                    }
+                }
+                
+                if (selectionTime <= 0) {
+                    clearInterval(selectionInterval);
+                    // Auto-select random player if time expires
+                    const randomPlayer = playerNames[Math.floor(Math.random() * playerNames.length)];
+                    selectPlayer(randomPlayer);
+                }
+            }, 1000);
+        }
+
+        function selectPlayer(playerName) {
+            gameState.currentPlayer = gameState.players.find(p => p.name === playerName);
+            document.getElementById('playerSelectModal').classList.remove('active');
+            
+            // Show role reveal
+            showRoleReveal();
+            
+            // Load death note if exists
+            document.getElementById('deathNoteText').value = gameState.currentPlayer.deathNote || '';
+            
+            // Start the actual game
+            gameState.gameStarted = true;
+            gameState.phase = 'night';
+            gameState.day = 1;
+
+            // Hide start button after game starts
+            document.getElementById('startButton').style.display = 'none';
+
+            updateNarrative("Night has fallen on the village. The Traitors awaken to choose their victim...");
+            updatePhase();
+            updateChatVisibility();
+            updateDeathNoteVisibility();
+            
+            // Start night timer for traitors
+            startNightTimer();
+        }
+
+        function startNightTimer() {
+            gameState.nightDiscussionPhase = true;
+            gameState.nightTimeRemaining = 25;
+            document.getElementById('timerDisplay').style.display = 'block';
+            document.getElementById('timerPhaseText').textContent = '🔪 Traitor Discussion';
+            document.getElementById('timerPhaseText').style.color = '#ff4d5a';
+            document.getElementById('timerCountdown').textContent = '25s';
+            
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.nightTimeRemaining--;
+                document.getElementById('timerCountdown').textContent = gameState.nightTimeRemaining + 's';
+                
+                if (gameState.nightTimeRemaining <= 0) {
+                    switchToNightVoting();
+                }
+            }, 1000);
+            
+            // Trigger traitor bot discussion
+            triggerTraitorBotDiscussion();
+        }
+
+        function triggerTraitorBotDiscussion() {
+            const traitorBots = gameState.players.filter(p => 
+                p.alive && 
+                (p.role === 'TRAITOR' || p.role === 'ASSASSIN') &&
+                p.name !== gameState.currentPlayer?.name
+            );
+            
+            if (traitorBots.length === 0) return;
+            
+            let messageIndex = 0;
+            
+            // Send first message immediately
+            if (traitorBots[messageIndex]) {
+                generateTraitorBotMessage(traitorBots[messageIndex]);
+                messageIndex++;
+            }
+            
+            // Continue every 7 seconds during discussion
+            const discussionInterval = setInterval(() => {
+                if (!gameState.nightDiscussionPhase || gameState.phase !== 'night') {
+                    clearInterval(discussionInterval);
+                    return;
+                }
+                
+                if (messageIndex >= traitorBots.length) {
+                    messageIndex = 0;
+                }
+                
+                generateTraitorBotMessage(traitorBots[messageIndex]);
+                messageIndex++;
+            }, 7000);
+        }
+
+        function generateTraitorBotMessage(bot) {
+            const alivePlayers = gameState.players.filter(p => p.alive);
+            const townPlayers = alivePlayers.filter(p => {
+                const dynamicRoles = getDynamicRoles(gameState.players.length);
+                const playerRole = dynamicRoles[p.role] || roles[p.role];
+                return playerRole && playerRole.team === 'town';
+            });
+            
+            // Strategic traitor discussion
+            const messages = [
+                `We should kill ${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name}. They're dangerous.`,
+                `${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name} has been leading discussions. Take them out.`,
+                `I think ${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name} might be the investigator.`,
+                `Let's target ${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name}. They're too smart.`,
+                `${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name} is rallying the town. Priority target.`,
+                `We need to take out ${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name} before they figure us out.`,
+                `${townPlayers[Math.floor(Math.random() * townPlayers.length)]?.name} seems to trust me. But we should kill them anyway.`,
+                `Who do we think is the doctor? We need to avoid them for now.`,
+                `We're doing well. Just stay under the radar during day.`,
+                `Don't be too aggressive in voting tomorrow. Stay subtle.`
+            ];
+            
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            
+            const chatMessage = {
+                player: bot.name,
+                text: message,
+                timestamp: Date.now()
+            };
+            
+            gameState.mafiaChat.push(chatMessage);
+            renderTraitorChat();
+        }
+
+        function switchToNightVoting() {
+            clearInterval(gameState.timerInterval);
+            gameState.nightDiscussionPhase = false;
+            gameState.nightTimeRemaining = 10; // Changed from 15 to 10 seconds
+            document.getElementById('timerPhaseText').textContent = '🗳️ Traitor Voting';
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.nightTimeRemaining--;
+                document.getElementById('timerCountdown').textContent = gameState.nightTimeRemaining + 's';
+                
+                if (gameState.nightTimeRemaining <= 0) {
+                    endNightVoting();
+                }
+            }, 1000);
+            
+            // Trigger bot traitor votes
+            triggerTraitorBotVotes();
+        }
+
+        function endNightVoting() {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('timerDisplay').style.display = 'none';
+            executeTraitorKill();
+        }
+
+        async function triggerTraitorBotVotes() {
+            // Get traitor/assassin bots
+            const traitorBots = gameState.players.filter(p => 
+                p.alive && 
+                (p.role === 'TRAITOR' || p.role === 'ASSASSIN') &&
+                p.name !== gameState.currentPlayer.name
+            );
+            
+            for (const bot of traitorBots) {
+                setTimeout(() => {
+                    if (!gameState.nightDiscussionPhase && gameState.phase === 'night') {
+                        generateTraitorBotVote(bot);
+                    }
+                }, Math.random() * 5000);
+            }
+        }
+
+        async function generateTraitorBotVote(bot) {
+            // Check if this traitor already voted
+            const currentVotes = gameState.nightActions.traitorVotes;
+            const alreadyVoted = Object.values(currentVotes).some(voters => 
+                voters && voters.includes && voters.includes(bot.name)
+            );
+            
+            if (alreadyVoted) return; // Already voted
+            
+            const validTargets = gameState.players.filter(p => 
+                p.alive && 
+                p.role !== 'TRAITOR' && 
+                p.role !== 'ASSASSIN'
+            );
+            
+            if (validTargets.length === 0) return;
+            
+            // Simple logic: pick random town member
+            // Prioritize players who talk more (potential leaders)
+            const talkers = validTargets.sort((a, b) => {
+                const aMessages = gameState.statistics.messageCount[a.name] || 0;
+                const bMessages = gameState.statistics.messageCount[b.name] || 0;
+                return bMessages - aMessages;
+            });
+            
+            // 60% chance to target most talkative, 40% random
+            let target;
+            if (Math.random() < 0.6 && talkers.length > 0) {
+                target = talkers[0].name; // Most talkative
+            } else {
+                target = validTargets[Math.floor(Math.random() * validTargets.length)].name;
+            }
+            
+            voteToKillAsBot(target, bot.name);
+        }
+
+        function voteToKillAsBot(playerName, botName) {
+            if (!gameState.nightActions.traitorVotes[playerName]) {
+                gameState.nightActions.traitorVotes[playerName] = [];
+            }
+            
+            // Only add vote if this bot hasn't voted yet
+            if (!gameState.nightActions.traitorVotes[playerName].includes(botName)) {
+                gameState.nightActions.traitorVotes[playerName].push(botName);
+            }
+        }
+
+        function showRoleReveal() {
+            const modal = document.getElementById('roleRevealModal');
+            const content = document.getElementById('roleRevealContent');
+            const role = gameState.currentPlayer.role;
+            const roleInfo = roles[role];
+            
+            let description = '';
+            switch(role) {
+                case 'TRAITOR':
+                    const traitorPartners = gameState.players.filter(p => 
+                        (p.role === 'TRAITOR' || p.role === 'ASSASSIN') && p.name !== gameState.currentPlayer.name
+                    ).map(p => p.name);
+                    description = `You are a Traitor! Work with your team to eliminate the town. You can see and chat with other Traitors at night.<br><br><strong style="color: #ff4d5a;">Your partners: ${traitorPartners.join(', ')}</strong>`;
+                    break;
+                case 'ASSASSIN':
+                    const assassinPartners = gameState.players.filter(p => p.role === 'TRAITOR').map(p => p.name);
+                    description = `You are the Assassin! You support the Traitor team. You have ONE kill to use during the entire game. Use it wisely! You can chat with the Traitors at night.<br><br><strong style="color: #ff4d5a;">Your Traitor partners: ${assassinPartners.join(', ')}</strong>`;
+                    break;
+                case 'INVESTIGATOR':
+                    description = 'You are the Investigator! You can investigate ONE player EVERY 2 NIGHTS to learn their role.';
+                    break;
+                case 'DOCTOR':
+                    description = 'You are the Doctor! You can protect ONE player EVERY NIGHT from being killed.';
+                    break;
+                case 'VIGILANTE':
+                    description = 'You are the Vigilante! You have ONE bullet to kill a player you suspect is a Traitor. Use it carefully!';
+                    break;
+                case 'LOVER':
+                    description = `You are a Lover! You are paired with ${gameState.currentPlayer.loverPartner}. If one of you dies, both die.`;
+                    break;
+                default:
+                    description = 'You are a Townie! Use your voice during the day to help identify the Traitors.';
+            }
+
+            content.innerHTML = `
+                <div style="padding: 20px; background: rgba(240, 165, 0, 0.1); border-radius: 8px;">
+                    <h3 style="color: #f0a500; margin-bottom: 15px;">${roleInfo.name}</h3>
+                    <p style="line-height: 1.6;">${description}</p>
+                    <p style="margin-top: 15px; color: ${roleInfo.team === 'traitor' ? '#ff4d5a' : '#4d9eff'}; font-weight: bold;">
+                        Team: ${roleInfo.team === 'traitor' ? 'TRAITOR' : 'TOWN'}
+                    </p>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeRoleReveal() {
+            document.getElementById('roleRevealModal').classList.remove('active');
+        }
+
+        function updatePhase() {
+            const indicator = document.getElementById('phaseIndicator');
+            if (gameState.phase === 'night') {
+                indicator.innerHTML = `🌙 Night ${gameState.day}`;
+                indicator.style.background = 'rgba(30, 30, 60, 0.6)';
+            } else {
+                indicator.innerHTML = `☀️ Day ${gameState.day}`;
+                indicator.style.background = 'rgba(240, 165, 0, 0.2)';
+            }
+            updateChatVisibility();
+            updateDeathNoteVisibility();
+        }
+
+        function updateChatVisibility() {
+            const chatSection = document.getElementById('chatSection');
+            const spectateSection = document.getElementById('spectateSection');
+            const chatTitle = document.getElementById('chatTitle');
+            const nightActionPanel = document.getElementById('nightActionPanel');
+            
+            // Hide everything first
+            chatSection.style.display = 'none';
+            spectateSection.style.display = 'none';
+            nightActionPanel.style.display = 'none';
+            
+            if (!gameState.currentPlayer) return;
+            
+            // Dead players go to SpectateVerse during day
+            if (!gameState.currentPlayer.alive) {
+                if (gameState.phase === 'day') {
+                    spectateSection.style.display = 'block';
+                    renderSpectateChat();
+                }
+                return;
+            }
+
+            // Alive players
+            if (gameState.phase === 'night') {
+                // Show traitor chat and voting for traitors and assassin
+                if (gameState.currentPlayer.role === 'TRAITOR' || gameState.currentPlayer.role === 'ASSASSIN') {
+                    chatSection.style.display = 'block';
+                    chatTitle.textContent = '🔪 Traitor Secret Chat';
+                    chatTitle.style.color = '#ff4d5a';
+                    renderTraitorChat();
+                    
+                    // Show traitor voting panel
+                    nightActionPanel.style.display = 'block';
+                    showTraitorVoting();
+                } else {
+                    chatSection.style.display = 'none';
+                    
+                    // Show night action panel for Doctor and Investigator
+                    if (gameState.currentPlayer.role === 'DOCTOR' || gameState.currentPlayer.role === 'INVESTIGATOR') {
+                        nightActionPanel.style.display = 'block';
+                        showNightActionPanel();
+                    }
+                }
+            } else {
+                // Show town chat during day for alive players
+                chatSection.style.display = 'block';
+                chatTitle.textContent = '💬 Town Discussion';
+                chatTitle.style.color = '#f0a500';
+                renderTownChat();
+                nightActionPanel.style.display = 'none';
+            }
+        }
+
+        function renderTownChat() {
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = '';
+            
+            gameState.chatMessages.forEach(msg => {
+                const msgEl = document.createElement('div');
+                msgEl.style.marginBottom = '10px';
+                msgEl.style.padding = '8px';
+                msgEl.style.background = 'rgba(255,255,255,0.05)';
+                msgEl.style.borderRadius = '6px';
+                msgEl.innerHTML = `<strong style="color: #f0a500;">${msg.player}:</strong> ${msg.text}`;
+                messagesDiv.appendChild(msgEl);
+            });
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Update spectate view for dead players
+            renderSpectateChat();
+        }
+
+        function renderTraitorChat() {
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = '';
+            
+            gameState.mafiaChat.forEach(msg => {
+                const msgEl = document.createElement('div');
+                msgEl.style.marginBottom = '10px';
+                msgEl.style.padding = '8px';
+                msgEl.style.background = 'rgba(255,77,90,0.1)';
+                msgEl.style.borderRadius = '6px';
+                msgEl.innerHTML = `<strong style="color: #ff4d5a;">${msg.player}:</strong> ${msg.text}`;
+                messagesDiv.appendChild(msgEl);
+            });
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (!text || !gameState.currentPlayer) return;
+            
+            const message = {
+                player: gameState.currentPlayer.name,
+                text: text,
+                timestamp: Date.now()
+            };
+            
+            // Track message count for statistics
+            if (!gameState.statistics.messageCount[gameState.currentPlayer.name]) {
+                gameState.statistics.messageCount[gameState.currentPlayer.name] = 0;
+            }
+            gameState.statistics.messageCount[gameState.currentPlayer.name]++;
+            
+            if (gameState.phase === 'night' && 
+                (gameState.currentPlayer.role === 'TRAITOR' || gameState.currentPlayer.role === 'ASSASSIN')) {
+                gameState.mafiaChat.push(message);
+                renderTraitorChat();
+            } else if (gameState.phase === 'day') {
+                gameState.chatMessages.push(message);
+                renderTownChat();
+            }
+            
+            input.value = '';
+        }
+
+        function showNightActionPanel() {
+            const title = document.getElementById('nightActionTitle');
+            const description = document.getElementById('nightActionDescription');
+            const buttonsDiv = document.getElementById('nightActionButtons');
+            const resultDiv = document.getElementById('nightActionResult');
+            
+            buttonsDiv.innerHTML = '';
+            resultDiv.style.display = 'none';
+            
+            const alivePlayers = gameState.players.filter(p => p.alive && p.name !== gameState.currentPlayer.name);
+            
+            if (gameState.currentPlayer.role === 'DOCTOR') {
+                title.textContent = '⚕️ Doctor - Save Someone';
+                description.textContent = 'Choose ONE player to save from being killed tonight:';
+                
+                alivePlayers.forEach(player => {
+                    const btn = document.createElement('button');
+                    btn.textContent = player.name;
+                    btn.onclick = () => savePlayer(player.name);
+                    buttonsDiv.appendChild(btn);
+                });
+                
+                if (gameState.nightActions.doctorSave) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<strong style="color: #4d9eff;">✓ You are saving ${gameState.nightActions.doctorSave} tonight.</strong>`;
+                }
+            } else if (gameState.currentPlayer.role === 'INVESTIGATOR') {
+                title.textContent = '🔍 Investigator - Investigate Someone';
+                
+                // Check if investigator can investigate (every 2 nights)
+                const nightsSinceLastUse = gameState.day - gameState.nightActions.investigatorLastUsed;
+                const canInvestigate = gameState.nightActions.investigatorLastUsed === 0 || nightsSinceLastUse >= 2;
+                
+                if (!canInvestigate) {
+                    description.textContent = `You must wait ${2 - nightsSinceLastUse} more night(s) before investigating again.`;
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<strong style="color: #aaa;">⏳ Investigation on cooldown. Wait ${2 - nightsSinceLastUse} more night(s).</strong>`;
+                    return;
+                }
+                
+                description.textContent = 'Choose one player to investigate and learn if they are Town or Traitor:';
+                
+                alivePlayers.forEach(player => {
+                    const btn = document.createElement('button');
+                    btn.textContent = player.name;
+                    btn.onclick = () => investigatePlayer(player.name);
+                    buttonsDiv.appendChild(btn);
+                });
+                
+                if (gameState.nightActions.investigationResult) {
+                    resultDiv.style.display = 'block';
+                    const result = gameState.nightActions.investigationResult;
+                    const isTraitor = result.team === 'traitor';
+                    resultDiv.innerHTML = `<strong style="color: ${isTraitor ? '#ff4d5a' : '#4d9eff'};">Investigation Result: ${result.name} is ${isTraitor ? 'a TRAITOR! 🔴' : 'on the TOWN side ✓'}</strong>`;
+                }
+            }
+        }
+
+        function savePlayer(playerName) {
+            gameState.nightActions.doctorSave = playerName;
+            const resultDiv = document.getElementById('nightActionResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<strong style="color: #4d9eff;">✓ You are saving ${playerName} tonight.</strong>`;
+        }
+
+        function investigatePlayer(playerName) {
+            const player = gameState.players.find(p => p.name === playerName);
+            const team = roles[player.role].team;
+            
+            gameState.nightActions.investigatorTarget = playerName;
+            gameState.nightActions.investigatorLastUsed = gameState.day;
+            gameState.nightActions.investigationResult = {
+                name: playerName,
+                team: team
+            };
+            
+            const resultDiv = document.getElementById('nightActionResult');
+            resultDiv.style.display = 'block';
+            const isTraitor = team === 'traitor';
+            resultDiv.innerHTML = `<strong style="color: ${isTraitor ? '#ff4d5a' : '#4d9eff'}">Investigation Result: ${playerName} is ${isTraitor ? 'a TRAITOR! 🔴' : 'on the TOWN side ✓'}</strong>`;
+        }
+
+        function showTraitorVoting() {
+            const title = document.getElementById('nightActionTitle');
+            const description = document.getElementById('nightActionDescription');
+            const buttonsDiv = document.getElementById('nightActionButtons');
+            const resultDiv = document.getElementById('nightActionResult');
+            
+            title.textContent = '🔪 Vote to Kill';
+            description.textContent = 'Traitors vote together on who to eliminate tonight. You cannot kill other Traitors! Each traitor can only vote once.';
+            
+            buttonsDiv.innerHTML = '';
+            resultDiv.style.display = 'none';
+            
+            // Get alive players that are NOT traitors or assassins
+            const validTargets = gameState.players.filter(p => 
+                p.alive && 
+                p.role !== 'TRAITOR' && 
+                p.role !== 'ASSASSIN'
+            );
+            
+            validTargets.forEach(player => {
+                const btn = document.createElement('button');
+                const voteCount = gameState.nightActions.traitorVotes[player.name] ? 
+                    gameState.nightActions.traitorVotes[player.name].length : 0;
+                btn.textContent = `${player.name} (${voteCount} votes)`;
+                btn.onclick = () => voteToKill(player.name);
+                btn.style.background = '#8b0000';
+                buttonsDiv.appendChild(btn);
+            });
+            
+            // Show current votes
+            const totalVotes = Object.values(gameState.nightActions.traitorVotes)
+                .reduce((sum, voters) => sum + (voters ? voters.length : 0), 0);
+                
+            if (totalVotes > 0) {
+                resultDiv.style.display = 'block';
+                let maxVotes = 0;
+                let leaders = [];
+                
+                for (let [name, voters] of Object.entries(gameState.nightActions.traitorVotes)) {
+                    const count = voters ? voters.length : 0;
+                    if (count > maxVotes) {
+                        maxVotes = count;
+                        leaders = [name];
+                    } else if (count === maxVotes && count > 0) {
+                        leaders.push(name);
+                    }
+                }
+                
+                resultDiv.innerHTML = `<strong style="color: #ff4d5a;">Current target: ${leaders.join(', ')} (${maxVotes} vote${maxVotes > 1 ? 's' : ''})</strong>`;
+            }
+        }
+
+        function voteToKill(playerName) {
+            if (!gameState.currentPlayer) return;
+            
+            // Check if current player is traitor/assassin
+            if (gameState.currentPlayer.role !== 'TRAITOR' && gameState.currentPlayer.role !== 'ASSASSIN') {
+                return;
+            }
+            
+            // Check if already voted
+            const alreadyVoted = Object.values(gameState.nightActions.traitorVotes).some(voters => 
+                voters && voters.includes && voters.includes(gameState.currentPlayer.name)
+            );
+            
+            if (alreadyVoted) {
+                alert("You have already voted!");
+                return;
+            }
+            
+            if (!gameState.nightActions.traitorVotes[playerName]) {
+                gameState.nightActions.traitorVotes[playerName] = [];
+            }
+            
+            gameState.nightActions.traitorVotes[playerName].push(gameState.currentPlayer.name);
+            
+            // Refresh voting display
+            showTraitorVoting();
+        }
+
+        function updateDeathNoteVisibility() {
+            const deathNotePanel = document.getElementById('deathNotePanel');
+            const deathLogPanel = document.getElementById('deathLogPanel');
+            
+            if (gameState.currentPlayer && gameState.currentPlayer.alive) {
+                deathNotePanel.style.display = 'block';
+            } else {
+                deathNotePanel.style.display = 'none';
+            }
+            
+            if (gameState.deathLog.length > 0) {
+                deathLogPanel.style.display = 'block';
+                renderDeathLog();
+            } else {
+                deathLogPanel.style.display = 'none';
+            }
+        }
+
+        function saveDeathNote() {
+            const noteText = document.getElementById('deathNoteText').value;
+            if (gameState.currentPlayer) {
+                gameState.currentPlayer.deathNote = noteText;
+                const savedMsg = document.getElementById('deathNoteSaved');
+                savedMsg.style.display = 'block';
+                setTimeout(() => {
+                    savedMsg.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        function renderDeathLog() {
+            const logContent = document.getElementById('deathLogContent');
+            logContent.innerHTML = '';
+            
+            gameState.deathLog.forEach(death => {
+                const deathCard = document.createElement('div');
+                deathCard.style.marginBottom = '15px';
+                deathCard.style.padding = '15px';
+                deathCard.style.background = 'rgba(139, 0, 0, 0.2)';
+                deathCard.style.borderRadius = '8px';
+                deathCard.style.borderLeft = '4px solid #ff4d5a';
+                
+                let html = `
+                    <div style="margin-bottom: 8px;">
+                        <strong style="color: #ff4d5a; font-size: 1.1em;">${death.name}</strong>
+                        <span style="color: #aaa; margin-left: 10px;">Night ${death.night}</span>
+                    </div>
+                    <div style="color: #ccc; margin-bottom: 5px;">
+                        <strong>Cause of Death:</strong> ${death.cause}
+                    </div>
+                    <div style="color: #f0a500; margin-bottom: 8px;">
+                        <strong>Role:</strong> ${death.role}
+                    </div>
+                `;
+                
+                if (death.deathNote && death.deathNote.trim()) {
+                    html += `
+                        <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; border-left: 3px solid #f0a500;">
+                            <strong style="color: #f0a500;">📝 Final Words:</strong>
+                            <p style="margin-top: 5px; color: #eee; font-style: italic;">"${death.deathNote}"</p>
+                        </div>
+                    `;
+                }
+                
+                deathCard.innerHTML = html;
+                logContent.appendChild(deathCard);
+            });
+        }
+
+        function recordDeath(playerName, cause, killerName = null) {
+            const player = gameState.players.find(p => p.name === playerName);
+            if (!player) return;
+            
+            player.alive = false;
+            
+            // Track first death
+            if (!gameState.statistics.firstDeath) {
+                gameState.statistics.firstDeath = playerName;
+            }
+            
+            // Track kills
+            if (killerName) {
+                if (!gameState.statistics.killCount[killerName]) {
+                    gameState.statistics.killCount[killerName] = 0;
+                }
+                gameState.statistics.killCount[killerName]++;
+            }
+            
+            const deathEntry = {
+                name: playerName,
+                role: roles[player.role].name,
+                cause: cause,
+                night: gameState.day,
+                deathNote: player.deathNote || ''
+            };
+            
+            gameState.deathLog.push(deathEntry);
+            
+            // Check if lover
+            if (player.role === 'LOVER' && player.loverPartner) {
+                const partner = gameState.players.find(p => p.name === player.loverPartner);
+                if (partner && partner.alive) {
+                    partner.alive = false;
+                    const partnerDeathEntry = {
+                        name: partner.name,
+                        role: roles[partner.role].name,
+                        cause: 'Died of heartbreak (Lover\'s bond)',
+                        night: gameState.day,
+                        deathNote: partner.deathNote || ''
+                    };
+                    gameState.deathLog.push(partnerDeathEntry);
+                }
+            }
+            
+            renderPlayers();
+            updateDeathNoteVisibility();
+        }
+
+        function updateNarrative(text) {
+            document.getElementById('narrativeText').innerHTML = text;
+        }
+
+        function transitionToNight() {
+            // Transition to night
+            gameState.phase = 'night';
+            gameState.day++;
+            
+            // Clear timer
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            document.getElementById('timerDisplay').style.display = 'none';
+            
+            document.getElementById('votingSection').style.display = 'none';
+            updateNarrative(`Night falls once again. The village sleeps as the Traitors plot their next move...`);
+            updatePhase();
+            
+            // Start night timer
+            startNightTimer();
+        }
+
+        function executeTraitorKill() {
+            // Find the player with most votes
+            if (Object.keys(gameState.nightActions.traitorVotes).length === 0) {
+                transitionToDay('The Traitors could not agree on a target. No one was killed tonight.');
+                return;
+            }
+            
+            let maxVotes = 0;
+            let victim = null;
+            
+            for (let playerName in gameState.nightActions.traitorVotes) {
+                const voteCount = gameState.nightActions.traitorVotes[playerName].length;
+                if (voteCount > maxVotes) {
+                    maxVotes = voteCount;
+                    victim = playerName;
+                }
+            }
+            
+            if (!victim || maxVotes === 0) {
+                transitionToDay('No one was killed tonight.');
+                return;
+            }
+            
+            // Check if doctor saved them
+            if (gameState.nightActions.doctorSave === victim) {
+                transitionToDay(`💀 The Traitors attacked ${victim}, but the Doctor saved them! ${victim} survives the night.`);
+                return;
+            }
+            
+            // Pick a random death cause
+            const cause = deathCauses[Math.floor(Math.random() * deathCauses.length)];
+            
+            // Track kill for traitors
+            const traitors = gameState.players.filter(p => p.alive && (p.role === 'TRAITOR' || p.role === 'ASSASSIN'));
+            traitors.forEach(traitor => {
+                recordDeath(victim, cause, traitor.name);
+            });
+            
+            const deathEntry = gameState.deathLog[gameState.deathLog.length - 1];
+            
+            let narrativeText = `💀 The village awakens to find ${victim} has been killed! Cause: ${cause}. They were the ${deathEntry.role}.`;
+            
+            if (deathEntry.deathNote && deathEntry.deathNote.trim()) {
+                narrativeText += `<br><br><div style="padding: 15px; background: rgba(240, 165, 0, 0.15); border-radius: 8px; margin-top: 10px; border-left: 4px solid #f0a500;">
+                    <strong style="color: #f0a500;">📝 ${victim}'s Final Words:</strong>
+                    <p style="margin-top: 8px; font-style: italic; color: #eee;">"${deathEntry.deathNote}"</p>
+                </div>`;
+            }
+            
+            // Check if lover died too
+            const lastTwo = gameState.deathLog.slice(-2);
+            if (lastTwo.length === 2 && lastTwo[1].cause.includes('Lover')) {
+                narrativeText += `<br><br>💔 ${lastTwo[1].name} dies of heartbreak... They were also a ${lastTwo[1].role}.`;
+                if (lastTwo[1].deathNote && lastTwo[1].deathNote.trim()) {
+                    narrativeText += `<br><div style="padding: 15px; background: rgba(240, 165, 0, 0.15); border-radius: 8px; margin-top: 10px; border-left: 4px solid #f0a500;">
+                        <strong style="color: #f0a500;">📝 ${lastTwo[1].name}'s Final Words:</strong>
+                        <p style="margin-top: 8px; font-style: italic; color: #eee;">"${lastTwo[1].deathNote}"</p>
+                    </div>`;
+                }
+            }
+            
+            transitionToDay(narrativeText);
+        }
+
+        function transitionToDay(nightMessage) {
+            // Transition to day
+            gameState.phase = 'day';
+            
+            // Clear night actions for next night
+            gameState.nightActions.doctorSave = null;
+            gameState.nightActions.traitorVotes = {}; // Reset to empty object
+            
+            // Count alive traitors
+            const aliveTraitors = gameState.players.filter(p => p.alive && (p.role === 'TRAITOR' || p.role === 'ASSASSIN'));
+            
+            let dayMessage = nightMessage + `<br><br><strong style="color: #ff4d5a;">⚠️ ${aliveTraitors.length} Traitor(s) remain among you!</strong><br><br>It's time to discuss what happened during the night and vote on who to eliminate. Use the chat to discuss!`;
+            
+            updateNarrative(dayMessage);
+            updatePhase();
+            
+            document.getElementById('votingSection').style.display = 'block';
+            renderVotingButtons();
+            
+            // Start discussion timer
+            startDiscussionTimer();
+            
+            checkWinCondition();
+        }
+
+        function renderVotingButtons() {
+            const votingDiv = document.getElementById('votingButtons');
+            votingDiv.innerHTML = '';
+            gameState.votes = {};
+            gameState.playerVoted = {};
+
+            // Don't show voting buttons if player is dead
+            if (!gameState.currentPlayer || !gameState.currentPlayer.alive) {
+                votingDiv.innerHTML = '<p style="color: #999; font-style: italic; text-align: center;">You cannot vote because you are dead.</p>';
+                return;
+            }
+
+            // Add Abstain button
+            const abstainBtn = document.createElement('button');
+            abstainBtn.className = 'vote-button';
+            abstainBtn.style.background = '#666';
+            abstainBtn.style.color = '#fff';
+            abstainBtn.innerHTML = `Abstain (Skip Vote) <span class="vote-count" id="votes-abstain">0</span>`;
+            abstainBtn.onclick = () => addVote('abstain');
+            votingDiv.appendChild(abstainBtn);
+
+            gameState.players.filter(p => p.alive).forEach(player => {
+                const btn = document.createElement('button');
+                btn.className = 'vote-button';
+                btn.innerHTML = `Xcute ${player.name} <span class="vote-count" id="votes-${player.name}">0</span>`;
+                btn.onclick = () => addVote(player.name);
+                votingDiv.appendChild(btn);
+            });
+        }
+
+        function addVote(playerName) {
+            if (!gameState.currentPlayer || !gameState.currentPlayer.alive) {
+                alert("You cannot vote because you are dead!");
+                return;
+            }
+            
+            // Check if still in discussion phase
+            if (gameState.discussionPhase) {
+                alert("Voting is not allowed during discussion phase! Wait for the voting phase.");
+                return;
+            }
+            
+            // Check if current player already voted
+            if (gameState.playerVoted[gameState.currentPlayer.name]) {
+                alert("You have already voted! Each player can only vote once.");
+                return;
+            }
+            
+            if (!gameState.votes[playerName]) {
+                gameState.votes[playerName] = 0;
+            }
+            gameState.votes[playerName]++;
+            gameState.playerVoted[gameState.currentPlayer.name] = playerName;
+            
+            const voteElement = document.getElementById(`votes-${playerName}`);
+            if (voteElement) {
+                voteElement.textContent = gameState.votes[playerName];
+            }
+            
+            // Show confirmation
+            alert(`You voted to xcute ${playerName === 'abstain' ? 'Abstain (Skip)' : playerName}`);
+        }
+
+        function startDiscussionTimer() {
+            gameState.discussionPhase = true;
+            gameState.timeRemaining = 210;
+            document.getElementById('timerDisplay').style.display = 'block';
+            document.getElementById('timerPhaseText').textContent = '💬 Discussion Phase';
+            document.getElementById('timerPhaseText').style.color = '#f0a500';
+            updateTimerDisplay();
+            
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeRemaining--;
+                updateTimerDisplay();
+                
+                if (gameState.timeRemaining <= 0) {
+                    switchToVotingPhase();
+                }
+            }, 1000);
+            
+            // Bots participate in discussion - spaced out every 15 seconds
+            triggerBotDiscussion();
+        }
+
+        function switchToVotingPhase() {
+            clearInterval(gameState.timerInterval);
+            gameState.discussionPhase = false;
+            gameState.timeRemaining = 15;
+            document.getElementById('timerPhaseText').textContent = '🗳️ Voting Phase';
+            document.getElementById('timerPhaseText').style.color = '#ff4d5a';
+            updateTimerDisplay();
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeRemaining--;
+                updateTimerDisplay();
+                
+                if (gameState.timeRemaining <= 0) {
+                    endVotingPhase();
+                }
+            }, 1000);
+            
+            // Bots vote during voting phase
+            setTimeout(() => triggerBotVotes(), 2000);
+        }
+
+        function endVotingPhase() {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('timerDisplay').style.display = 'none';
+            tallyVotes();
+            
+            // After votes are tallied, transition to night
+            setTimeout(() => {
+                transitionToNight();
+            }, 3000); // 3 second delay to read results
+        }
+
+        function updateTimerDisplay() {
+            const countdown = document.getElementById('timerCountdown');
+            countdown.textContent = gameState.timeRemaining + 's';
+            
+            // Color changes based on time
+            if (gameState.timeRemaining <= 10) {
+                countdown.style.color = '#ff4d5a';
+            } else if (gameState.timeRemaining <= 30) {
+                countdown.style.color = '#ffc107';
+            } else {
+                countdown.style.color = '#fff';
+            }
+        }
+
+        async function triggerBotDiscussion() {
+            // Trigger bots to discuss during discussion phase - every 7 seconds
+            const botPlayers = gameState.players.filter(p => 
+                p.alive && p.name !== gameState.currentPlayer.name
+            );
+            
+            if (botPlayers.length === 0) return;
+            
+            let messageIndex = 0;
+            
+            // Send first message immediately
+            if (botPlayers[messageIndex]) {
+                generateBotMessage(botPlayers[messageIndex]);
+                messageIndex++;
+            }
+            
+            // Then continue every 7 seconds
+            const messageInterval = setInterval(() => {
+                if (!gameState.discussionPhase || gameState.phase !== 'day') {
+                    clearInterval(messageInterval);
+                    return;
+                }
+                
+                if (messageIndex >= botPlayers.length) {
+                    messageIndex = 0; // Loop back to start
+                }
+                
+                generateBotMessage(botPlayers[messageIndex]);
+                messageIndex++;
+            }, 7000); // Every 7 seconds
+        }
+
+        function renderSpectateChat() {
+            const spectateDiv = document.getElementById('spectateMessages');
+            if (!spectateDiv) return;
+            
+            spectateDiv.innerHTML = '';
+
+            gameState.chatMessages.forEach(msg => {
+                const msgEl = document.createElement('div');
+                msgEl.style.cssText = 'padding: 8px; margin: 5px 0; background: rgba(102, 126, 234, 0.1); border-radius: 6px; border-left: 3px solid #667eea;';
+                msgEl.innerHTML = `<strong style="color: #667eea;">${msg.player}:</strong> <span style="color: #eee;">${msg.text}</span>`;
+                spectateDiv.appendChild(msgEl);
+            });
+
+            spectateDiv.scrollTop = spectateDiv.scrollHeight;
+        }
+
+        async function generateBotMessage(bot) {
+            const personality = botPersonalities[bot.name];
+            const role = bot.role;
+            const roleInfo = roles[role];
+            
+            // Use simple rule-based messages instead of API
+            const message = generateSimpleBotMessage(bot);
+            
+            // Add bot message to chat
+            const chatMessage = {
+                player: bot.name,
+                text: message,
+                timestamp: Date.now()
+            };
+            
+            gameState.chatMessages.push(chatMessage);
+            renderTownChat();
+            
+            // Track for statistics
+            if (!gameState.statistics.messageCount[bot.name]) {
+                gameState.statistics.messageCount[bot.name] = 0;
+            }
+            gameState.statistics.messageCount[bot.name]++;
+        }
+
+        // Track what bots have said to avoid repetition
+        const botMessageHistory = new Set();
+
+        function generateSimpleBotMessage(bot) {
+            const personality = botPersonalities[bot.name];
+            const role = bot.role;
+            const currentDay = gameState.day;
+            
+            // Get real game context
+            const recentDeaths = gameState.deathLog.filter(d => d.night === currentDay || d.night === currentDay - 1);
+            const recentMessages = gameState.chatMessages.slice(-15);
+            const alivePlayers = gameState.players.filter(p => p.alive);
+            
+            // Track actual accusations, claims, and questions
+            const accusations = {};
+            const roleClaims = {};
+            const questions = [];
+            const defenses = {};
+            
+            recentMessages.forEach(msg => {
+                const text = msg.text.toLowerCase();
+                
+                // Detect role claims (CRITICAL for game)
+                if ((text.includes('i am') || text.includes('im') || text.includes('i\'m')) && 
+                    (text.includes('doctor') || text.includes('investigator') || text.includes('detective') || 
+                     text.includes('vigilante') || text.includes('lover') || text.includes('townie'))) {
+                    const claimedRole = text.includes('doctor') ? 'DOCTOR' : 
+                                       text.includes('investigator') || text.includes('detective') ? 'INVESTIGATOR' :
+                                       text.includes('vigilante') ? 'VIGILANTE' :
+                                       text.includes('lover') ? 'LOVER' : 'TOWNIE';
+                    roleClaims[msg.player] = claimedRole;
+                }
+                
+                // Find questions
+                if (text.includes('?')) {
+                    questions.push({ player: msg.player, text: msg.text });
+                }
+                
+                // Find accusations
+                alivePlayers.forEach(p => {
+                    const name = p.name.toLowerCase();
+                    if (text.includes(name)) {
+                        if (text.includes('traitor') || text.includes('suspicious') || text.includes('lying') || text.includes('vote')) {
+                            if (!accusations[p.name]) accusations[p.name] = [];
+                            accusations[p.name].push(msg.player);
+                        }
+                        if (text.includes('trust') || text.includes('innocent')) {
+                            if (!defenses[p.name]) defenses[p.name] = [];
+                            defenses[p.name].push(msg.player);
+                        }
+                    }
+                });
+            });
+            
+            // DETECT ROLE CLAIM CONFLICTS (HIGHEST PRIORITY)
+            if (Object.keys(roleClaims).length > 0) {
+                for (let [claimant, claimedRole] of Object.entries(roleClaims)) {
+                    // If bot has same role and someone else claimed it
+                    if (bot.role === claimedRole && claimant !== bot.name) {
+                        const messages = [
+                            `Wait, ${claimant}... YOU'RE claiming ${claimedRole}? That's impossible because I'M the ${claimedRole}. You're lying!`,
+                            `${claimant}, I don't believe you. I am the real ${claimedRole}, so you must be a traitor trying to confuse us!`,
+                            `Hold on everyone - ${claimant} just claimed ${claimedRole} but that's MY role. ${claimant} is definitely a traitor!`
+                        ];
+                        const msg = messages[Math.floor(Math.random() * messages.length)];
+                        if (!botMessageHistory.has(msg)) {
+                            botMessageHistory.add(msg);
+                            return msg;
+                        }
+                    }
+                    
+                    // If bot sees conflicting claims from others
+                    if (claimant !== bot.name) {
+                        const otherClaims = Object.entries(roleClaims).filter(([name, r]) => 
+                            r === claimedRole && name !== claimant
+                        );
+                        if (otherClaims.length > 0) {
+                            const msg = `We have a problem. Both ${claimant} and ${otherClaims[0][0]} are claiming ${claimedRole}. One of them is lying. This is critical information!`;
+                            if (!botMessageHistory.has(msg)) {
+                                botMessageHistory.add(msg);
+                                return msg;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Check if this bot was accused
+            const accusedMe = accusations[bot.name] && accusations[bot.name].length > 0;
+            
+            // DEFEND IF ACCUSED (with emotion and pausing)
+            if (accusedMe) {
+                const accuser = accusations[bot.name][accusations[bot.name].length - 1];
+                const isWeak = Math.random() < 0.3; // 30% chance of weak defense
+                
+                if (isWeak && role === 'TRAITOR') {
+                    // Traitors caught might give weak defense
+                    const weakDefenses = [
+                        `${accuser}... I... I don't know what to say. I've been trying to help but...`,
+                        `Wait, ${accuser}, I... *pauses* Look, I can explain my votes. I thought...`,
+                        `${accuser}, that's... okay maybe my behavior looked bad but I swear I'm not a traitor.`
+                    ];
+                    const msg = weakDefenses[Math.floor(Math.random() * weakDefenses.length)];
+                    if (!botMessageHistory.has(msg)) {
+                        botMessageHistory.add(msg);
+                        return msg;
+                    }
+                } else {
+                    // Strong, emotional defense
+                    const strongDefenses = [
+                        `${accuser}, are you SERIOUS?! I've been helping town this whole time! Look at my votes - they ALL align with finding traitors!`,
+                        `${accuser}, this is absolutely ridiculous! Show me ONE piece of evidence. Just one! You can't, because I'm innocent!`,
+                        `NO, ${accuser}! I'm tired of these baseless accusations. I've been transparent about everything. YOU'RE the suspicious one!`,
+                        `${accuser}, you need to back that up with evidence from actual days. What did I do that was suspicious? NOTHING!`
+                    ];
+                    const msg = strongDefenses[Math.floor(Math.random() * strongDefenses.length)];
+                    if (!botMessageHistory.has(msg)) {
+                        botMessageHistory.add(msg);
+                        return msg;
+                    }
+                }
+            }
+            
+            // DAY 1 - Limited knowledge
+            if (currentDay === 1) {
+                const day1Messages = [
+                    `Let's all pay close attention to voting patterns today. That's all we have to work with right now.`,
+                    `Day 1 is tough, but we need to start somewhere. I'll be watching how everyone responds to pressure.`,
+                    `Remember everyone - voting abstain on Day 1 is basically hiding. We need to make choices even with limited info.`,
+                    `I'm going to focus on who seems too eager to misdirect discussion. That's usually a tell.`
+                ];
+                const msg = day1Messages[Math.floor(Math.random() * day1Messages.length)];
+                if (!botMessageHistory.has(msg)) {
+                    botMessageHistory.add(msg);
+                    return msg;
+                }
+            }
+            
+            // ANSWER QUESTIONS (shows engagement)
+            if (questions.length > 0 && Math.random() < 0.6) {
+                const lastQ = questions[questions.length - 1];
+                const qText = lastQ.text.toLowerCase();
+                
+                if (qText.includes('trust') || qText.includes('who')) {
+                    const trusted = alivePlayers.filter(p => defenses[p.name]).sort((a, b) => 
+                        (defenses[b.name]?.length || 0) - (defenses[a.name]?.length || 0)
+                    )[0];
+                    if (trusted) {
+                        const msg = `${lastQ.player}, based on behavior so far, I trust ${trusted.name}. They've been consistent and helpful to town.`;
+                        if (!botMessageHistory.has(msg)) {
+                            botMessageHistory.add(msg);
+                            return msg;
+                        }
+                    }
+                }
+                
+                if (qText.includes('abstain')) {
+                    const msg = `${lastQ.player}, abstaining too much is cowardly. We NEED to make decisions even with imperfect information. Hiding helps traitors.`;
+                    if (!botMessageHistory.has(msg)) {
+                        botMessageHistory.add(msg);
+                        return msg;
+                    }
+                }
+            }
+            
+            // ACCUSE BASED ON REAL EVIDENCE
+            const mostAccused = Object.entries(accusations).sort((a, b) => b[1].length - a[1].length)[0];
+            if (mostAccused && mostAccused[0] !== bot.name && mostAccused[1].length >= 2) {
+                const target = mostAccused[0];
+                const msg = `I'm with the others on ${target}. Multiple people are seeing the same red flags. ${target}, you need to give us a REAL defense with evidence.`;
+                if (!botMessageHistory.has(msg)) {
+                    botMessageHistory.add(msg);
+                    return msg;
+                }
+            }
+            
+            // REFERENCE ACTUAL DEATHS with emotion
+            if (recentDeaths.length > 0) {
+                const lastDeath = recentDeaths[recentDeaths.length - 1];
+                const emotionalDeathMessages = [
+                    `Losing ${lastDeath.name} really hurts... They were ${lastDeath.role} and we needed them. Whoever did this knew what they were doing.`,
+                    `${lastDeath.name}'s death changes everything. As ${lastDeath.role}, they were a major target. Let's think about who would want them gone.`,
+                    `Rest in peace ${lastDeath.name}. Your death note said "${lastDeath.deathNote || 'nothing'}". We should take that seriously.`
+                ];
+                const msg = emotionalDeathMessages[Math.floor(Math.random() * emotionalDeathMessages.length)];
+                if (!botMessageHistory.has(msg)) {
+                    botMessageHistory.add(msg);
+                    return msg;
+                }
+            }
+            
+            // STRATEGIC OBSERVATIONS (varied)
+            const strategic = [
+                `Let's analyze voting from yesterday. Who voted against town consensus? That's our best lead right now.`,
+                `I've noticed some people are way too defensive when they're not even being accused. That's a major red flag.`,
+                `Can we all agree to share our suspicions instead of hiding them? Information sharing helps town win.`,
+                `The pattern I'm seeing is interesting. Someone is always quick to redirect when we get close to truth.`
+            ];
+            
+            const msg = strategic[Math.floor(Math.random() * strategic.length)];
+            if (!botMessageHistory.has(msg)) {
+                botMessageHistory.add(msg);
+                return msg;
+            }
+            
+            // Fallback - generic but unique
+            return `I'm watching everyone carefully. Day ${currentDay} and we need to be smart about this.`;
+        }
+
+        async function triggerBotVotes() {
+            // After human votes, trigger remaining bots to vote
+            const botPlayers = gameState.players.filter(p => 
+                p.alive && 
+                p.name !== gameState.currentPlayer.name && 
+                !gameState.playerVoted[p.name]
+            );
+            
+            for (const bot of botPlayers) {
+                setTimeout(() => {
+                    if (!gameState.discussionPhase && gameState.phase === 'day') {
+                        generateBotVote(bot);
+                    }
+                }, Math.random() * 5000); // Random delay up to 5 seconds
+            }
+        }
+
+        async function generateBotVote(bot) {
+            if (gameState.playerVoted[bot.name]) return; // Already voted
+            
+            const alivePlayers = gameState.players.filter(p => p.alive);
+            const recentMessages = gameState.chatMessages.slice(-20);
+            
+            // ANALYZE DISCUSSION FOR VOTING
+            const accusations = {};
+            const roleClaims = {};
+            const weakDefenses = new Set();
+            
+            recentMessages.forEach(msg => {
+                const text = msg.text.toLowerCase();
+                
+                // Track role claims
+                alivePlayers.forEach(p => {
+                    if (msg.player === p.name && 
+                        (text.includes('i am') || text.includes('im')) && 
+                        (text.includes('doctor') || text.includes('investigator') || text.includes('vigilante'))) {
+                        const role = text.includes('doctor') ? 'DOCTOR' : 
+                                   text.includes('investigator') ? 'INVESTIGATOR' : 'VIGILANTE';
+                        roleClaims[p.name] = role;
+                    }
+                });
+                
+                // Track accusations with weight
+                alivePlayers.forEach(p => {
+                    if (text.includes(p.name.toLowerCase()) && 
+                        (text.includes('traitor') || text.includes('lying') || text.includes('vote'))) {
+                        if (!accusations[p.name]) accusations[p.name] = 0;
+                        accusations[p.name] += 2; // Strong accusation
+                    }
+                });
+                
+                // Detect weak defenses (pausing, uncertainty)
+                if (text.includes('...') || text.includes('i... ') || text.includes('*pauses*') || 
+                    text.includes('i don\'t know what') || text.includes('maybe')) {
+                    weakDefenses.add(msg.player);
+                }
+            });
+            
+            // CRITICAL: Check for conflicting role claims
+            const claimConflicts = {};
+            Object.entries(roleClaims).forEach(([player1, role1]) => {
+                Object.entries(roleClaims).forEach(([player2, role2]) => {
+                    if (player1 !== player2 && role1 === role2) {
+                        claimConflicts[player1] = player2;
+                        claimConflicts[player2] = player1;
+                    }
+                });
+            });
+            
+            // VOTE PRIORITY SYSTEM
+            let voteTarget = null;
+            let voteReason = '';
+            
+            // PRIORITY 1: Vote for conflicting role claims (HIGHEST)
+            if (Object.keys(claimConflicts).length > 0) {
+                const conflictingPlayers = Object.keys(claimConflicts);
+                // If bot knows real role, vote for the liar
+                for (let claimant of conflictingPlayers) {
+                    const claimedRole = roleClaims[claimant];
+                    const realRoleHolder = gameState.players.find(p => p.role === claimedRole);
+                    if (realRoleHolder && realRoleHolder.name !== claimant) {
+                        voteTarget = claimant;
+                        voteReason = 'false role claim';
+                        break;
+                    }
+                }
+                
+                // If can't determine, vote for one with weak defense
+                if (!voteTarget) {
+                    for (let claimant of conflictingPlayers) {
+                        if (weakDefenses.has(claimant)) {
+                            voteTarget = claimant;
+                            voteReason = 'weak defense on conflicting claim';
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // PRIORITY 2: Vote for players with weak defenses when accused
+            if (!voteTarget && weakDefenses.size > 0) {
+                const weakDefendersArray = Array.from(weakDefenses);
+                voteTarget = weakDefendersArray[0];
+                voteReason = 'weak/hesitant defense';
+            }
+            
+            // PRIORITY 3: Vote based on accusation count
+            if (!voteTarget) {
+                const sortedAccusations = Object.entries(accusations)
+                    .filter(([name]) => name !== bot.name)
+                    .sort((a, b) => b[1] - a[1]);
+                
+                if (sortedAccusations.length > 0 && sortedAccusations[0][1] >= 2) {
+                    voteTarget = sortedAccusations[0][0];
+                    voteReason = 'multiple accusations';
+                }
+            }
+            
+            // PRIORITY 4: Traitors vote strategically
+            if (!voteTarget && (bot.role === 'TRAITOR' || bot.role === 'ASSASSIN')) {
+                const townPlayers = alivePlayers.filter(p => {
+                    const dynamicRoles = getDynamicRoles(gameState.players.length);
+                    const playerRole = dynamicRoles[p.role] || roles[p.role];
+                    return playerRole && playerRole.team === 'town';
+                });
+                
+                // Target players who claimed important roles
+                const importantTargets = townPlayers.filter(p => 
+                    roleClaims[p.name] === 'DOCTOR' || roleClaims[p.name] === 'INVESTIGATOR'
+                );
+                
+                if (importantTargets.length > 0) {
+                    voteTarget = importantTargets[0].name;
+                } else if (townPlayers.length > 0) {
+                    voteTarget = townPlayers[0].name;
+                }
+            }
+            
+            // PRIORITY 5: Town with no clear target - abstain or vote cautiously
+            if (!voteTarget) {
+                const personality = botPersonalities[bot.name];
+                if (personality.traits.includes('cautious') || gameState.day === 1) {
+                    voteTarget = 'abstain';
+                } else {
+                    // Vote for least active player
+                    const messageCount = {};
+                    recentMessages.forEach(msg => {
+                        messageCount[msg.player] = (messageCount[msg.player] || 0) + 1;
+                    });
+                    const quietest = alivePlayers.filter(p => p.name !== bot.name)
+                        .sort((a, b) => (messageCount[a.name] || 0) - (messageCount[b.name] || 0))[0];
+                    voteTarget = quietest ? quietest.name : 'abstain';
+                }
+            }
+            
+            castBotVote(bot.name, voteTarget);
+        }
+
+        function castBotVote(botName, target) {
+            if (!gameState.votes[target]) {
+                gameState.votes[target] = 0;
+            }
+            gameState.votes[target]++;
+            gameState.playerVoted[botName] = target;
+            
+            const voteElement = document.getElementById(`votes-${target}`);
+            if (voteElement) {
+                voteElement.textContent = gameState.votes[target];
+            }
+        }
+
+        function buildGameContext(bot) {
+            let context = `Day ${gameState.day}\n`;
+            context += `Alive players: ${gameState.players.filter(p => p.alive).map(p => p.name).join(', ')}\n`;
+            
+            if (gameState.deathLog.length > 0) {
+                context += `\nRecent deaths:\n`;
+                gameState.deathLog.slice(-3).forEach(death => {
+                    context += `- ${death.name} (${death.role}) - ${death.cause}\n`;
+                });
+            }
+            
+            if (gameState.chatMessages.length > 0) {
+                context += `\nRecent discussion:\n`;
+                gameState.chatMessages.slice(-5).forEach(msg => {
+                    context += `${msg.player}: ${msg.text}\n`;
+                });
+            }
+            
+            return context;
+        }
+
+        function saveBotMemory() {
+            // Save game outcome to bot memory for NLP learning
+            const winner = gameState.players.filter(p => p.alive)[0];
+            if (!winner) return;
+            
+            const winningTeam = roles[winner.role].team;
+            
+            gameState.players.forEach(player => {
+                if (player.name === gameState.currentPlayer.name) return; // Skip human player
+                
+                if (!gameState.botMemory[player.name]) {
+                    gameState.botMemory[player.name] = [];
+                }
+                
+                const memory = `Game ${gameState.botMemory[player.name].length + 1}: I was ${roles[player.role].name}. ${winningTeam === roles[player.role].team ? 'My team won.' : 'My team lost.'} I ${player.alive ? 'survived' : 'died on day ' + gameState.deathLog.find(d => d.name === player.name)?.night}.`;
+                
+                gameState.botMemory[player.name].push(memory);
+                
+                // Keep only last 5 games in memory
+                if (gameState.botMemory[player.name].length > 5) {
+                    gameState.botMemory[player.name].shift();
+                }
+            });
+            
+            // Store in localStorage for persistence
+            try {
+                localStorage.setItem('tatBotMemory', JSON.stringify(gameState.botMemory));
+            } catch (e) {
+                console.log('Could not save bot memory');
+            }
+        }
+
+        function loadBotMemory() {
+            try {
+                const saved = localStorage.getItem('tatBotMemory');
+                if (saved) {
+                    gameState.botMemory = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.log('Could not load bot memory');
+            }
+        }
+
+        function generateGameCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing chars
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function createGame(withBots) {
+            // Get town name from input
+            let townName = document.getElementById('townNameInput').value.trim();
+            
+            if (!townName) {
+                alert('Please enter a town name!');
+                return;
+            }
+            
+            // Filter inappropriate words
+            const badWords = ['fuck', 'shit', 'ass', 'damn', 'bitch', 'dick', 'cock', 'pussy', 'nigger', 'nigga', 'cunt', 'whore', 'slut', 'fag', 'rape'];
+            const lowerName = townName.toLowerCase();
+            if (badWords.some(word => lowerName.includes(word))) {
+                alert('Please choose an appropriate town name!');
+                return;
+            }
+            
+            gameState.isMultiplayer = true;
+            gameState.withBots = withBots;
+            gameState.isHost = true;
+            gameState.gameCode = generateGameCode();
+            gameState.townName = townName;
+            gameState.maxPlayers = withBots ? 13 : 13;
+            gameState.minPlayers = withBots ? 1 : 3;
+            
+            // Show lobby screen
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('lobbyScreen').style.display = 'block';
+            document.getElementById('gameCodeDisplay').textContent = gameState.gameCode;
+            document.getElementById('townNameDisplay').textContent = townName;
+            document.getElementById('maxPlayersDisplay').textContent = gameState.maxPlayers;
+            
+            // Add host to lobby
+            const playerName = prompt('Enter your name:') || 'Player1';
+            gameState.connectedPlayers = [{
+                name: playerName,
+                id: generatePlayerId(),
+                isHost: true
+            }];
+            
+            // Save lobby to localStorage for other players to join
+            saveLobbyState();
+            updatePlayerList();
+            
+            // Start polling for new players
+            startLobbyPolling();
+        }
+
+        function joinGame() {
+            const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+            if (!code) {
+                alert('Please enter a game code');
+                return;
+            }
+            
+            // Load lobby from localStorage
+            const lobbyKey = `tat_lobby_${code}`;
+            const lobbyData = localStorage.getItem(lobbyKey);
+            
+            if (!lobbyData) {
+                alert('Game not found! Check the code and try again.');
+                return;
+            }
+            
+            const lobby = JSON.parse(lobbyData);
+            
+            if (lobby.players.length >= lobby.maxPlayers) {
+                alert('This game is full!');
+                return;
+            }
+            
+            const playerName = prompt('Enter your name:') || `Player${lobby.players.length + 1}`;
+            
+            gameState.isMultiplayer = true;
+            gameState.withBots = lobby.withBots;
+            gameState.isHost = false;
+            gameState.gameCode = code;
+            gameState.maxPlayers = lobby.maxPlayers;
+            gameState.minPlayers = lobby.minPlayers;
+            
+            // Add self to lobby
+            const newPlayer = {
+                name: playerName,
+                id: generatePlayerId(),
+                isHost: false
+            };
+            
+            lobby.players.push(newPlayer);
+            localStorage.setItem(lobbyKey, JSON.stringify(lobby));
+            
+            gameState.connectedPlayers = lobby.players;
+            
+            // Show lobby screen
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('lobbyScreen').style.display = 'block';
+            document.getElementById('gameCodeDisplay').textContent = gameState.gameCode;
+            document.getElementById('maxPlayersDisplay').textContent = gameState.maxPlayers;
+            document.getElementById('startButton').disabled = true; // Only host can start
+            
+            updatePlayerList();
+            startLobbyPolling();
+        }
+
+        function generatePlayerId() {
+            // Check if we already have an ID for this session
+            let playerId = sessionStorage.getItem('tat_player_id');
+            if (!playerId) {
+                playerId = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('tat_player_id', playerId);
+            }
+            return playerId;
+        }
+
+        function saveLobbyState() {
+            const lobbyKey = `tat_lobby_${gameState.gameCode}`;
+            const lobbyData = {
+                code: gameState.gameCode,
+                withBots: gameState.withBots,
+                maxPlayers: gameState.maxPlayers,
+                minPlayers: gameState.minPlayers,
+                players: gameState.connectedPlayers,
+                started: false,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(lobbyKey, JSON.stringify(lobbyData));
+        }
+
+        function syncGameState() {
+            // Save current game state for other players to sync
+            if (!gameState.gameCode) return;
+            
+            const syncKey = `tat_sync_${gameState.gameCode}`;
+            const syncData = {
+                phase: gameState.phase,
+                day: gameState.day,
+                timeRemaining: gameState.timeRemaining,
+                nightTimeRemaining: gameState.nightTimeRemaining,
+                discussionPhase: gameState.discussionPhase,
+                nightDiscussionPhase: gameState.nightDiscussionPhase,
+                chatMessages: gameState.chatMessages,
+                mafiaChat: gameState.mafiaChat,
+                deathLog: gameState.deathLog,
+                votes: gameState.votes,
+                playerVoted: gameState.playerVoted,
+                players: gameState.players.map(p => ({
+                    name: p.name,
+                    alive: p.alive,
+                    role: p.role
+                })),
+                timestamp: Date.now()
+            };
+            localStorage.setItem(syncKey, JSON.stringify(syncData));
+        }
+
+        function loadGameState() {
+            // Load game state from host
+            if (!gameState.gameCode || gameState.isHost) return;
+            
+            const syncKey = `tat_sync_${gameState.gameCode}`;
+            const syncData = localStorage.getItem(syncKey);
+            
+            if (syncData) {
+                const data = JSON.parse(syncData);
+                
+                // Update local state to match host
+                gameState.phase = data.phase;
+                gameState.day = data.day;
+                gameState.timeRemaining = data.timeRemaining;
+                gameState.nightTimeRemaining = data.nightTimeRemaining;
+                gameState.discussionPhase = data.discussionPhase;
+                gameState.nightDiscussionPhase = data.nightDiscussionPhase;
+                gameState.chatMessages = data.chatMessages;
+                gameState.mafiaChat = data.mafiaChat;
+                gameState.deathLog = data.deathLog;
+                gameState.votes = data.votes;
+                gameState.playerVoted = data.playerVoted;
+                
+                // Update player states
+                data.players.forEach(syncPlayer => {
+                    const localPlayer = gameState.players.find(p => p.name === syncPlayer.name);
+                    if (localPlayer) {
+                        localPlayer.alive = syncPlayer.alive;
+                    }
+                });
+                
+                // Update UI
+                renderPlayers();
+                renderTownChat();
+                updateChatVisibility();
+            }
+        }
+
+        // Poll for game state updates every second
+        function startGameStatePolling() {
+            if (gameState.isHost) {
+                // Host syncs state every second
+                setInterval(() => {
+                    if (gameState.gameStarted) {
+                        syncGameState();
+                    }
+                }, 1000);
+            } else {
+                // Non-host loads state every second
+                setInterval(() => {
+                    if (gameState.gameStarted) {
+                        loadGameState();
+                    }
+                }, 1000);
+            }
+        }
+
+        function startLobbyPolling() {
+            // Poll for lobby updates every second
+            if (gameState.multiplayerPolling) {
+                clearInterval(gameState.multiplayerPolling);
+            }
+            
+            gameState.multiplayerPolling = setInterval(() => {
+                const lobbyKey = `tat_lobby_${gameState.gameCode}`;
+                const lobbyData = localStorage.getItem(lobbyKey);
+                
+                if (lobbyData) {
+                    const lobby = JSON.parse(lobbyData);
+                    gameState.connectedPlayers = lobby.players;
+                    updatePlayerList();
+                    
+                    // Check if game started
+                    if (lobby.started && !gameState.gameStarted) {
+                        clearInterval(gameState.multiplayerPolling);
+                        startMultiplayerGame();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updatePlayerList() {
+            document.getElementById('playerCountDisplay').textContent = gameState.connectedPlayers.length;
+            
+            const listContent = document.getElementById('playerListContent');
+            listContent.innerHTML = '';
+            
+            gameState.connectedPlayers.forEach((player, index) => {
+                const playerDiv = document.createElement('div');
+                playerDiv.style.cssText = 'padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.05); border-radius: 5px;';
+                playerDiv.innerHTML = `${index + 1}. ${player.name} ${player.isHost ? '👑 (Host)' : ''}`;
+                listContent.appendChild(playerDiv);
+            });
+            
+            // Enable start button if enough players and is host
+            if (gameState.isHost) {
+                const canStart = gameState.connectedPlayers.length >= gameState.minPlayers;
+                document.getElementById('startButton').disabled = !canStart;
+            }
+        }
+
+        function startMultiplayerGame() {
+            // This will be called when host starts the game
+            document.getElementById('lobbyScreen').style.display = 'none';
+            initializeMultiplayerGame();
+        }
+
+        function tallyVotes() {
+            let maxVotes = 0;
+            let eliminated = null;
+
+            for (let player in gameState.votes) {
+                if (gameState.votes[player] > maxVotes) {
+                    maxVotes = gameState.votes[player];
+                    eliminated = player;
+                }
+            }
+
+            if (eliminated) {
+                recordDeath(eliminated, 'Executed by village vote');
+                
+                const deathEntry = gameState.deathLog[gameState.deathLog.length - 1];
+                
+                let narrativeText = `${eliminated} has been eliminated by vote! They were the ${deathEntry.role}.`;
+                
+                // Check if there's a death note
+                if (deathEntry.deathNote && deathEntry.deathNote.trim()) {
+                    narrativeText += `<br><br><div style="padding: 15px; background: rgba(240, 165, 0, 0.15); border-radius: 8px; margin-top: 10px; border-left: 4px solid #f0a500;">
+                        <strong style="color: #f0a500;">📝 ${eliminated}'s Final Words:</strong>
+                        <p style="margin-top: 8px; font-style: italic; color: #eee;">"${deathEntry.deathNote}"</p>
+                    </div>`;
+                }
+                
+                // Check if lover died too
+                const lastTwo = gameState.deathLog.slice(-2);
+                if (lastTwo.length === 2 && lastTwo[1].cause.includes('Lover')) {
+                    narrativeText += `<br><br>💔 ${lastTwo[1].name} dies of heartbreak... They were also a ${lastTwo[1].role}.`;
+                    if (lastTwo[1].deathNote && lastTwo[1].deathNote.trim()) {
+                        narrativeText += `<br><div style="padding: 15px; background: rgba(240, 165, 0, 0.15); border-radius: 8px; margin-top: 10px; border-left: 4px solid #f0a500;">
+                            <strong style="color: #f0a500;">📝 ${lastTwo[1].name}'s Final Words:</strong>
+                            <p style="margin-top: 8px; font-style: italic; color: #eee;">"${lastTwo[1].deathNote}"</p>
+                        </div>`;
+                    }
+                }
+
+                updateNarrative(narrativeText);
+                checkWinCondition();
+            } else {
+                updateNarrative("No consensus was reached. No one is eliminated.");
+            }
+
+            document.getElementById('votingSection').style.display = 'none';
+        }
+
+        function checkWinCondition() {
+            const alivePlayers = gameState.players.filter(p => p.alive);
+            const aliveTraitors = alivePlayers.filter(p => p.role === 'TRAITOR' || p.role === 'ASSASSIN');
+            const aliveTown = alivePlayers.filter(p => roles[p.role].team === 'town');
+
+            if (aliveTraitors.length === 0) {
+                endGame('🎉 Town wins! All Traitors (including the Assassin) have been eliminated!');
+            } else if (aliveTraitors.length >= aliveTown.length) {
+                endGame('💀 Traitors win! They have taken over the village!');
+            }
+        }
+
+        function endGame(message) {
+            // Save bot memories for NLP
+            saveBotMemory();
+            
+            // Calculate statistics
+            const townLeader = Object.entries(gameState.statistics.messageCount)
+                .sort((a, b) => b[1] - a[1])[0];
+            
+            const quietest = Object.entries(gameState.statistics.messageCount)
+                .sort((a, b) => a[1] - b[1])[0];
+            
+            const bestKiller = Object.entries(gameState.statistics.killCount)
+                .sort((a, b) => b[1] - a[1])[0];
+            
+            const firstDeath = gameState.statistics.firstDeath;
+            
+            // Build role reveal
+            let roleReveal = '<h3 style="color: #f0a500; margin-top: 20px;">All Player Roles:</h3><div style="text-align: left; margin: 20px auto; max-width: 600px;">';
+            gameState.players.forEach(player => {
+                const roleInfo = getDynamicRoles(gameState.players.length)[player.role] || roles[player.role];
+                roleReveal += `<p><strong>${player.name}:</strong> ${roleInfo.name} (${roleInfo.team === 'traitor' ? '🔴 Traitor Team' : '🔵 Town'})</p>`;
+            });
+            roleReveal += '</div>';
+            
+            // Build statistics
+            let stats = '<h3 style="color: #f0a500; margin-top: 30px;">Game Statistics:</h3><div style="text-align: left; margin: 20px auto; max-width: 600px;">';
+            if (townLeader) stats += `<p>🗣️ <strong>Town Leader (Most Talkative):</strong> ${townLeader[0]} (${townLeader[1]} messages)</p>`;
+            if (quietest && quietest[1] > 0) stats += `<p>🤐 <strong>Quietest Player:</strong> ${quietest[0]} (${quietest[1]} messages)</p>`;
+            if (bestKiller) stats += `<p>💀 <strong>Best Killer:</strong> ${bestKiller[0]} (${bestKiller[1]} kills)</p>`;
+            if (firstDeath) stats += `<p>⚰️ <strong>First to Die:</strong> ${firstDeath}</p>`;
+            stats += '</div>';
+            
+            // Add restart button
+            const restartBtn = `<button onclick="resetGame()" style="
+                background: #28a745;
+                color: white;
+                font-size: 1.3em;
+                padding: 15px 40px;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                margin-top: 30px;
+                box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            ">🔄 Restart Game</button>`;
+            
+            updateNarrative(`<div class="game-over"><h2>GAME OVER</h2><p style="font-size: 1.3em; margin: 20px 0;">${message}</p>${roleReveal}${stats}${restartBtn}</div>`);
+            
+            // Clear timer
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            
+            // Return to lobby after 10 seconds
+            setTimeout(() => {
+                if (gameState.isMultiplayer) {
+                    // Go back to lobby
+                    document.querySelector('.game-info').style.display = 'block';
+                    document.getElementById('lobbyScreen').style.display = 'block';
+                    document.getElementById('votingSection').style.display = 'none';
+                    document.getElementById('chatSection').style.display = 'none';
+                    document.getElementById('spectateSection').style.display = 'none';
+                    document.getElementById('nightActionPanel').style.display = 'none';
+                } else {
+                    resetGame();
+                }
+            }, 10000);
+        }
+
+        function showRoles() {
+            const modal = document.getElementById('roleModal');
+            const assignments = document.getElementById('roleAssignments');
+            
+            let html = '';
+            gameState.players.forEach(player => {
+                const roleInfo = roles[player.role];
+                html += `<p><strong>${player.name}:</strong> ${roleInfo.name} (${roleInfo.team})${player.loverPartner ? ` - Paired with ${player.loverPartner}` : ''}</p>`;
+            });
+            
+            assignments.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('roleModal').classList.remove('active');
+        }
+
+        function resetGame() {
+            // Clear timer
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            if (gameState.multiplayerPolling) clearInterval(gameState.multiplayerPolling);
+            
+            // Clear lobby if exists
+            if (gameState.gameCode) {
+                const lobbyKey = `tat_lobby_${gameState.gameCode}`;
+                localStorage.removeItem(lobbyKey);
+            }
+            
+            const preservedMemory = gameState.botMemory; // Preserve across resets
+            
+            gameState = {
+                phase: 'setup',
+                day: 0,
+                players: [],
+                votes: {},
+                gameStarted: false,
+                vigilanteUsed: false,
+                assassinUsed: false,
+                currentPlayer: null,
+                chatMessages: [],
+                mafiaChat: [],
+                nightActions: {
+                    doctorSave: null,
+                    investigatorTarget: null,
+                    investigationResult: null,
+                    investigatorLastUsed: 0,
+                    traitorVotes: {},
+                    assassinKill: null
+                },
+                deathLog: [],
+                playerVoted: {},
+                statistics: {
+                    messageCount: {},
+                    killCount: {},
+                    firstDeath: null
+                },
+                discussionPhase: true,
+                timeRemaining: 210,
+                timerInterval: null,
+                botMemory: preservedMemory,
+                playerSelectionTimer: 25,
+                nightDiscussionPhase: true,
+                nightTimeRemaining: 25,
+                isMultiplayer: false,
+                withBots: true,
+                gameCode: null,
+                isHost: false,
+                maxPlayers: 13,
+                minPlayers: 3,
+                connectedPlayers: [],
+                multiplayerPolling: null
+            };
+
+            // Show home screen
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('lobbyScreen').style.display = 'none';
+            document.getElementById('startButton').style.display = 'inline-block';
+            document.getElementById('votingSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('nightActionPanel').style.display = 'none';
+            document.getElementById('deathNotePanel').style.display = 'none';
+            document.getElementById('deathLogPanel').style.display = 'none';
+            document.getElementById('timerDisplay').style.display = 'none';
+            document.getElementById('playersGrid').innerHTML = '';
+            document.getElementById('joinCodeInput').value = '';
+            
+            updateNarrative("Welcome to the town! Grab your gun, medical license, your magnifying glass, your braincells, your knife, your riffle, your cards, your love, and most importantly, your FAITH. You try to walk down the stairs? Don't do it at night. You're trying to swim? Don't try it at night. You try to pick up books? Don't try it at night. You try to drink water? Don't try it at night. You want to go get some fresh air? Don't try it at night. Want to close to the wall? Don't try it at night. You want to trust someone? NEVER DO THAT AT NIGHT OR DAY. In this world of TAT, you can be heart broken, Xcuted, Killed, saved, betrayed, get played, and you can sure well experience fun and trust issues! ...help! help m-.... (I hate this town)");
+            document.getElementById('phaseIndicator').innerHTML = 'Game Starting...';
+        }
+
+        // Initialize on load
+        updateNarrative("Welcome to the village! A sinister threat lurks among you. Click 'Start Game' to begin...");
+    </script>
+</body>
+</html>
