@@ -1,2 +1,4 @@
 # TAT
-THIS GAME WAS MADE BY AI!!!! I WANTED TO TEST A GAME THE GAME FIRST! THE CODING WAS MADE BY AI! EVERYTHING ELSE WAS MADE BY ME! AFTER I LEARN CODING, I WILL CREATE MY OWN GAME!!!!!
+THIS GAME WAS MADE BY AI!!!! I WANTED TO TEST A GAME THE GAME FIRST! THE CODING WAS MADE BY AI! EVERYTHING ELSE WAS MADE BY ME! AFTER I LEARN CODING, I WILL CREATE MY OWN GAME!!!!! Game description:   Welcome to the town! Grab your gun, medical license, your magnifying glass, your braincells, your knife, your riffle, your cards, your love, and most importantly, your FAITH. You try to walk down the stairs? Don't do it at night. You're trying to swim? Don't try it at night. You try to pick up books? Don't try it at night. You try to drink water? Don't try it at night. You want to go get some fresh air? Don't try it at night. Want to close to the wall? Don't try it at night. You want to trust someone? NEVER DO THAT AT NIGHT OR DAY. In this world of TAT, you can be heart broken, Xcuted, Killed, saved, betrayed, get played, and you can sure well experience fun and trust issues! ...help! help m-.... (I hate this town)
+
+
